@@ -37,6 +37,7 @@ in vec2 vTexCoord;
 
 uniform vec3 uLightPos;
 uniform sampler2D uTexture;
+uniform sampler2D uNormalMap;
 uniform int uMapping;  // 0 = bump mapping, 1 = normal mapping
 
 out vec4 fragColor;
@@ -70,8 +71,8 @@ void main() {
     baseColor = texture(uTexture, vTexCoord).rgb;
   } else {
     // Normal mapping: the texture stores the tangent-space normal in [0, 1]
-    n = normalize(texture(uTexture, vTexCoord).rgb * 2.0 - 1.0);
-    baseColor = vec3(0.85, 0.65, 0.3);
+    n = normalize(texture(uNormalMap, vTexCoord).rgb * 2.0 - 1.0);
+    baseColor = texture(uTexture, vTexCoord).rgb;
   }
 
   vec3 Ka = 0.2 * baseColor;
@@ -135,6 +136,7 @@ function updateProgram() {
     uLightPos = gl.getUniformLocation(program, "uLightPos");
     uMapping = gl.getUniformLocation(program, "uMapping");
     gl.uniform1i(gl.getUniformLocation(program, "uTexture"), 0);
+    gl.uniform1i(gl.getUniformLocation(program, "uNormalMap"), 1);
     shaderError.textContent = "";
   } catch (e) {
     shaderError.textContent = e.message.replace(/\0/g, "");
@@ -216,7 +218,7 @@ const objects = [
   { mesh: cylinderMesh, texture: brickTexture, mapping: BUMP_MAPPING, offset: [1.8, 1.5, 0] },
   { mesh: torusMesh, texture: animatedTexture.texture, mapping: BUMP_MAPPING, offset: [-3, -1.5, 0] },
   { mesh: sphereMesh, texture: brickTexture, mapping: BUMP_MAPPING, offset: [0, -1.5, 0] },
-  { mesh: coneMesh, texture: normalTexture, mapping: NORMAL_MAPPING, offset: [3, -1.5, 0] }
+  { mesh: coneMesh, texture: brickTexture, mapping: NORMAL_MAPPING, offset: [3, -1.5, 0] }
 ];
 
 gl.enable(gl.DEPTH_TEST);
@@ -277,6 +279,8 @@ function render(time) {
   const axisRotation = ROTATE[axisSelect.value](sliderAngle * Math.PI / 180 + spinAngle);
   const rotation = multiply(multiply(rotateY(dragRotY), rotateX(dragRotX)), axisRotation);
 
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, normalTexture);
   gl.activeTexture(gl.TEXTURE0);
   if (animatedTexture.video.readyState >= animatedTexture.video.HAVE_CURRENT_DATA) {
     gl.bindTexture(gl.TEXTURE_2D, animatedTexture.texture);
