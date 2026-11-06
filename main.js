@@ -189,11 +189,32 @@ function loadTexture(url) {
 const brickTexture = loadTexture("brick.png");
 const normalTexture = loadTexture("texture2.jpg");
 
+function loadVideoTexture(url) {
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([128, 128, 128, 255]));
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+  const video = document.createElement("video");
+  video.loop = true;
+  video.muted = true;
+  video.playsInline = true;
+  video.src = url;
+  video.play().catch(() => {});
+  canvas.addEventListener("pointerdown", () => {
+    if (video.paused) video.play().catch(() => {});
+  });
+  return { texture, video };
+}
+
+const animatedTexture = loadVideoTexture("animated.mp4");
+
 const BUMP_MAPPING = 0, NORMAL_MAPPING = 1;
 const objects = [
   { mesh: cubeMesh, texture: brickTexture, mapping: BUMP_MAPPING, offset: [-1.8, 1.5, 0] },
   { mesh: cylinderMesh, texture: brickTexture, mapping: BUMP_MAPPING, offset: [1.8, 1.5, 0] },
-  { mesh: torusMesh, texture: brickTexture, mapping: BUMP_MAPPING, offset: [-3, -1.5, 0] },
+  { mesh: torusMesh, texture: animatedTexture.texture, mapping: BUMP_MAPPING, offset: [-3, -1.5, 0] },
   { mesh: sphereMesh, texture: brickTexture, mapping: BUMP_MAPPING, offset: [0, -1.5, 0] },
   { mesh: coneMesh, texture: brickTexture, mapping: BUMP_MAPPING, offset: [3, -1.5, 0] }
 ];
@@ -257,6 +278,11 @@ function render(time) {
   const rotation = multiply(multiply(rotateY(dragRotY), rotateX(dragRotX)), axisRotation);
 
   gl.activeTexture(gl.TEXTURE0);
+  if (animatedTexture.video.readyState >= animatedTexture.video.HAVE_CURRENT_DATA) {
+    gl.bindTexture(gl.TEXTURE_2D, animatedTexture.texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, animatedTexture.video);
+  }
   for (const { mesh, texture, mapping, offset } of objects) {
     gl.uniformMatrix4fv(uModelView, false, multiply(view, multiply(translate(...offset), rotation)));
     gl.uniform1i(uMapping, mapping);
