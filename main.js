@@ -216,7 +216,7 @@ const objects = [
   { mesh: cylinderMesh, texture: brickTexture, mapping: BUMP_MAPPING, offset: [1.8, 1.5, 0] },
   { mesh: torusMesh, texture: animatedTexture.texture, mapping: BUMP_MAPPING, offset: [-3, -1.5, 0] },
   { mesh: sphereMesh, texture: brickTexture, mapping: BUMP_MAPPING, offset: [0, -1.5, 0] },
-  { mesh: coneMesh, texture: brickTexture, mapping: BUMP_MAPPING, offset: [3, -1.5, 0] }
+  { mesh: coneMesh, texture: normalTexture, mapping: NORMAL_MAPPING, offset: [3, -1.5, 0] }
 ];
 
 gl.enable(gl.DEPTH_TEST);
